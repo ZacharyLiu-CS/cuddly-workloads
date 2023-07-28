@@ -119,9 +119,11 @@ static const char GOOD_CREDIT[] = "GC";
 static const char BAD_CREDIT[] = "BC";
 
 struct Key {
-  int32_t c_d_w_id;
+  int32_t c_d_w_id; // c_d_w_id = customer district_id +
+                    //            warehouse_id * NUM_DISTRICT_PER_WAREHOUSE
   int32_t c_id;
-  Key(int32_t c_d_w_id_ = 0, int32_t c_id_ = 0) : c_d_w_id(c_d_w_id_), c_id(c_id_) {}
+  Key(int32_t c_d_w_id_ = 0, int32_t c_id_ = 0)
+      : c_d_w_id(c_d_w_id_), c_id(c_id_) {}
 };
 
 struct Value {
@@ -214,12 +216,12 @@ static const int INITIAL_ORDERS_PER_DISTRICT = 3000;
 static const int MAX_ORDER_ID = 10000000;
 
 struct Key {
+  int32_t o_d_w_id; // o_d_w_id = customer district_id +
+                    //            warehouse_id * NUM_DISTRICT_PER_WAREHOUSE
   int32_t o_id;
-  int32_t o_d_id;
-  int32_t o_w_id;
-  int32_t o_c_id;
 };
 struct Value {
+  int32_t o_c_id;
   int32_t o_carrier_id;
   int32_t o_ol_cnt;
   int32_t o_all_local;
