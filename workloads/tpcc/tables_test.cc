@@ -9,8 +9,16 @@
 #include <gtest/gtest.h>
 #include "tables.h"
 
-TEST(TEST, Test){
-
+TEST(TPCC_TABLE, TABLE_DEFINITION_SIZE_TEST){
+  EXPECT_EQ(sizeof(TPCC::Warehouse::Key), 8);
+  EXPECT_EQ(sizeof(TPCC::District::Key), 8);
+  EXPECT_EQ(sizeof(TPCC::Customer::Key), 8);
+  EXPECT_EQ(sizeof(TPCC::History::Key), 8);
+  EXPECT_EQ(sizeof(TPCC::NewOrder::Key), 8);
+  EXPECT_EQ(sizeof(TPCC::Order::Key), 8);
+  EXPECT_EQ(sizeof(TPCC::OrderLine::Key), 8);
+  EXPECT_EQ(sizeof(TPCC::Item::Key), 8);
+  EXPECT_EQ(sizeof(TPCC::Stock::Key), 8);
 }
 
 int main(int argc, char **argv) {

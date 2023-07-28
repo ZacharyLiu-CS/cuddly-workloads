@@ -7,14 +7,19 @@
 #pragma once
 #include <cstdint>
 #include <cstring>
+#include <string>
 #include <vector>
 
 namespace TPCC {
 
 // reference: https://github.com/evanj/tpccbench/
 // Just a container for constants
+class Table {
+  virtual std::string ConvertByRow() = 0;
+  virtual std::vector<std::string> ConvertByColumn() = 0;
+};
 
-struct Address {
+struct Address : Table {
   // TODO: Embed this structure in warehouse, district, customer? This would
   // reduce some duplication, but would also change the field names
   static const int MIN_STREET = 10;
@@ -45,6 +50,8 @@ static const int MAX_WAREHOUSE_ID = 100;
 
 struct Key {
   int32_t w_id;
+  int32_t unused;
+  Key(int32_t w_id_ = 0) : w_id(w_id_), unused(0) {}
 };
 
 struct Value {
@@ -71,6 +78,7 @@ static const int NUM_PER_WAREHOUSE = 10;
 struct Key {
   int32_t d_id;
   int32_t d_w_id;
+  Key(int32_t d_id_ = 0, int32_t d_w_id_ = 0) : d_id(d_id_), d_w_id(d_w_id_) {}
 };
 
 struct Value {
@@ -111,12 +119,14 @@ static const char GOOD_CREDIT[] = "GC";
 static const char BAD_CREDIT[] = "BC";
 
 struct Key {
+  int32_t c_d_w_id;
   int32_t c_id;
-  int32_t c_d_id;
-  int32_t c_w_id;
+  Key(int32_t c_d_w_id_ = 0, int32_t c_id_ = 0) : c_d_w_id(c_d_w_id_), c_id(c_id_) {}
 };
 
 struct Value {
+  int32_t c_d_id;
+  int32_t c_w_id;
   float c_credit_lim;
   float c_discount;
   float c_balance;
@@ -149,6 +159,8 @@ static const int NUM_STOCK_PER_WAREHOUSE = 100000;
 struct Key {
   int32_t s_i_id;
   int32_t s_w_id;
+  Key(int32_t s_i_id_ = 0, int32_t s_w_id_ = 0)
+      : s_i_id(s_i_id_), s_w_id(s_w_id_) {}
 };
 
 struct Value {
@@ -161,7 +173,6 @@ struct Value {
 };
 
 } // namespace Stock
-
 
 namespace Item {
 static const int MIN_IM = 1;
@@ -177,6 +188,7 @@ static const int NUM_ITEMS = 100000;
 struct Key {
   int32_t i_id;
   int32_t unused;
+  Key(int32_t i_id_ = 0) : i_id(i_id_), unused(0) {}
 };
 
 struct Value {
@@ -245,13 +257,14 @@ namespace NewOrder {
 static const int INITIAL_NUM_PER_DISTRICT = 900;
 
 struct Key {
-  int32_t no_w_id;
-  int32_t no_d_id;
   int32_t no_o_id;
+  int32_t unused;
+  Key(int32_t no_o_id_ = 0) : no_o_id(no_o_id_) {}
 };
 
 struct Value {
-  char empty[0];
+  int32_t no_w_id;
+  int32_t no_d_id;
 };
 } // namespace NewOrder
 
@@ -263,6 +276,8 @@ static constexpr float INITIAL_AMOUNT = 10.00f;
 
 struct Key {
   int32_t h_c_id;
+  int32_t unused;
+  Key(int32_t h_c_id_ = 0) : h_c_id(h_c_id_), unused(0) {}
 };
 struct Value {
   int32_t h_c_d_id;

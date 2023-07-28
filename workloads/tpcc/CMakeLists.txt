@@ -35,13 +35,10 @@ add_executable(${PROJECT_NAME} ${MAIN_FILE} ${SOURCE_FILE})
 target_link_libraries(${PROJECT_NAME}
   )
 
-# #8. define gtest path
-set(GTEST_LIBRARY ${PROJECT_SOURCE_DIR}/third_party/googletest/build/lib)
-set(GTEST_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/third_party/googletest/googletest/include)
-set(GTEST_MAIN_LIBRARY ${GTEST_LIBRARY})
 
 #9. compile test files
-find_package(GTest)
+find_package(GTest REQUIRED)
+find_package(gflags REQUIRED)
 enable_testing()
 if (GTEST_FOUND)
   file(GLOB TEST_FILE ${PROJECT_SOURCE_DIR}/*_test.cc)
@@ -51,6 +48,7 @@ if (GTEST_FOUND)
     add_executable( ${testname} ${testsourcefile} ${SOURCE_FILE})
     target_link_libraries(${testname}
       gtest
+      gflags
       )
     add_test(NAME ${testname} COMMAND ${testname})
   ENDFOREACH(testsourcefile ${TEST_FILE})
