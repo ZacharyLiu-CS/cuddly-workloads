@@ -86,30 +86,6 @@ struct Value {
 };
 } // namespace District
 
-namespace Stock {
-static const int MIN_QUANTITY = 10;
-static const int MAX_QUANTITY = 100;
-static const int DIST = 24;
-static const int MIN_DATA = 26;
-static const int MAX_DATA = 50;
-static const int NUM_STOCK_PER_WAREHOUSE = 100000;
-
-struct Key {
-  int32_t s_i_id;
-  int32_t s_w_id;
-};
-
-struct Value {
-  int32_t s_quantity;
-  int32_t s_ytd;
-  int32_t s_order_cnt;
-  int32_t s_remote_cnt;
-  char s_dist[District::NUM_PER_WAREHOUSE][DIST + 1];
-  char s_data[MAX_DATA + 1];
-};
-
-} // namespace Stock
-
 // YYYY-MM-DD HH:MM:SS This is supposed to be a date/time field from Jan 1st
 // 1900 - Dec 31st 2100 with a resolution of 1 second. See TPC-C 1.3.1.
 static const int DATETIME_SIZE = 14;
@@ -162,6 +138,31 @@ struct Value {
 };
 } // namespace Customer
 
+namespace Stock {
+static const int MIN_QUANTITY = 10;
+static const int MAX_QUANTITY = 100;
+static const int DIST = 24;
+static const int MIN_DATA = 26;
+static const int MAX_DATA = 50;
+static const int NUM_STOCK_PER_WAREHOUSE = 100000;
+
+struct Key {
+  int32_t s_i_id;
+  int32_t s_w_id;
+};
+
+struct Value {
+  int32_t s_quantity;
+  int32_t s_ytd;
+  int32_t s_order_cnt;
+  int32_t s_remote_cnt;
+  char s_dist[District::NUM_PER_WAREHOUSE][DIST + 1];
+  char s_data[MAX_DATA + 1];
+};
+
+} // namespace Stock
+
+
 namespace Item {
 static const int MIN_IM = 1;
 static const int MAX_IM = 10000;
@@ -175,6 +176,7 @@ static const int NUM_ITEMS = 100000;
 
 struct Key {
   int32_t i_id;
+  int32_t unused;
 };
 
 struct Value {
@@ -184,7 +186,6 @@ struct Value {
   char i_data[MAX_DATA + 1];
 };
 } // namespace Item
-
 
 namespace Order {
 static const int MIN_CARRIER_ID = 1;
@@ -262,11 +263,10 @@ static constexpr float INITIAL_AMOUNT = 10.00f;
 
 struct Key {
   int32_t h_c_id;
+};
+struct Value {
   int32_t h_c_d_id;
   int32_t h_c_w_id;
-};
-
-struct Value {
   int32_t h_d_id;
   int32_t h_w_id;
   float h_amount;
@@ -275,110 +275,4 @@ struct Value {
 };
 } // namespace History
 
-// Data returned by the "order status" transaction.
-struct OrderStatusOutput {
-  // From customer
-  int32_t c_id; // unclear if this needs to be returned
-  float c_balance;
-
-  // From order
-  int32_t o_id;
-  int32_t o_carrier_id;
-
-  struct OrderLineSubset {
-    int32_t ol_i_id;
-    int32_t ol_supply_w_id;
-    int32_t ol_quantity;
-    float ol_amount;
-    char ol_delivery_d[DATETIME_SIZE + 1];
-  };
-
-  std::vector<OrderLineSubset> lines;
-
-  // From customer
-  char c_first[Customer::MAX_FIRST + 1];
-  char c_middle[Customer::MIDDLE + 1];
-  char c_last[Customer::MAX_LAST + 1];
-
-  // From order
-  char o_entry_d[DATETIME_SIZE + 1];
-};
-
-struct NewOrderItem {
-  int32_t i_id;
-  int32_t ol_supply_w_id;
-  int32_t ol_quantity;
-};
-
-struct NewOrderOutput {
-  // Zero initialize everything. This avoids copying uninitialized data around
-  // when serializing/deserializing.
-  NewOrderOutput() : w_tax(0), d_tax(0), o_id(0), c_discount(0), total(0) {
-    memset(c_last, 0, sizeof(c_last));
-    memset(c_credit, 0, sizeof(c_credit));
-    memset(status, 0, sizeof(status));
-  }
-
-  float w_tax;
-  float d_tax;
-
-  // From district d_next_o_id
-  int32_t o_id;
-
-  float c_discount;
-
-  // TODO: Client can compute this from other values.
-  float total;
-
-  struct ItemInfo {
-    static const char BRAND = 'B';
-    static const char GENERIC = 'G';
-
-    int32_t s_quantity;
-    float i_price;
-    // TODO: Client can compute this from other values.
-    float ol_amount;
-    char brand_generic;
-    char i_name[Item::MAX_NAME + 1];
-  };
-
-  std::vector<ItemInfo> items;
-  char c_last[Customer::MAX_LAST + 1];
-  char c_credit[Customer::CREDIT + 1];
-
-  static const int MAX_STATUS = 25;
-  static const char INVALID_ITEM_STATUS[];
-  char status[MAX_STATUS + 1];
-};
-
-struct PaymentOutput {
-  // TPC-C 2.5.3.4 specifies these output fields
-  char w_street_1[Address::MAX_STREET + 1];
-  char w_street_2[Address::MAX_STREET + 1];
-  char w_city[Address::MAX_CITY + 1];
-  char w_state[Address::STATE + 1];
-  char w_zip[Address::ZIP + 1];
-
-  char d_street_1[Address::MAX_STREET + 1];
-  char d_street_2[Address::MAX_STREET + 1];
-  char d_city[Address::MAX_CITY + 1];
-  char d_state[Address::STATE + 1];
-  char d_zip[Address::ZIP + 1];
-
-  float c_credit_lim;
-  float c_discount;
-  float c_balance;
-  char c_first[Customer::MAX_FIRST + 1];
-  char c_middle[Customer::MIDDLE + 1];
-  char c_last[Customer::MAX_LAST + 1];
-  char c_street_1[Address::MAX_STREET + 1];
-  char c_street_2[Address::MAX_STREET + 1];
-  char c_city[Address::MAX_CITY + 1];
-  char c_state[Address::STATE + 1];
-  char c_zip[Address::ZIP + 1];
-  char c_phone[Customer::PHONE + 1];
-  char c_since[DATETIME_SIZE + 1];
-  char c_credit[Customer::CREDIT + 1];
-  char c_data[Customer::MAX_DATA + 1];
-};
 } // namespace TPCC
