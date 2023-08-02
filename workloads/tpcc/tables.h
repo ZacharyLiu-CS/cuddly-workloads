@@ -14,12 +14,14 @@ namespace TPCC {
 
 // reference: https://github.com/evanj/tpccbench/
 // Just a container for constants
-class Table {
-  virtual std::string ConvertByRow() = 0;
-  virtual std::vector<std::string> ConvertByColumn() = 0;
-};
 
-struct Address : Table {
+template <typename T>
+int64_t convertToKey(T *t){
+  static_assert(sizeof(T) == sizeof(int64_t));
+  return *reinterpret_cast<int64_t *>(t);
+}
+
+struct Address  {
   // TODO: Embed this structure in warehouse, district, customer? This would
   // reduce some duplication, but would also change the field names
   static const int MIN_STREET = 10;
@@ -52,6 +54,9 @@ struct Key {
   int32_t w_id;
   int32_t unused;
   Key(int32_t w_id_ = 0) : w_id(w_id_), unused(0) {}
+  int64_t ToKey() {
+    return convertToKey(this);
+  }
 };
 
 struct Value {
@@ -76,9 +81,9 @@ static const int MAX_NAME = 10;
 static const int NUM_PER_WAREHOUSE = 10;
 
 struct Key {
-  int32_t d_id;
   int32_t d_w_id;
-  Key(int32_t d_id_ = 0, int32_t d_w_id_ = 0) : d_id(d_id_), d_w_id(d_w_id_) {}
+  int32_t d_id;
+  Key(int32_t d_w_id_ = 0, int32_t d_id_ = 0) : d_w_id(d_w_id_), d_id(d_id_) {}
 };
 
 struct Value {
@@ -122,8 +127,6 @@ struct Key {
   int32_t c_d_w_id; // c_d_w_id = customer district_id +
                     //            warehouse_id * NUM_DISTRICT_PER_WAREHOUSE
   int32_t c_id;
-  Key(int32_t c_d_w_id_ = 0, int32_t c_id_ = 0)
-      : c_d_w_id(c_d_w_id_), c_id(c_id_) {}
 };
 
 struct Value {
@@ -159,10 +162,10 @@ static const int MAX_DATA = 50;
 static const int NUM_STOCK_PER_WAREHOUSE = 100000;
 
 struct Key {
-  int32_t s_i_id;
   int32_t s_w_id;
-  Key(int32_t s_i_id_ = 0, int32_t s_w_id_ = 0)
-      : s_i_id(s_i_id_), s_w_id(s_w_id_) {}
+  int32_t s_i_id;
+  Key(int32_t s_w_id_ = 0, int32_t s_i_id_ = 0)
+      : s_w_id(s_w_id_), s_i_id(s_i_id_) {}
 };
 
 struct Value {
@@ -189,12 +192,10 @@ static const int NUM_ITEMS = 100000;
 
 struct Key {
   int32_t i_id;
-  int32_t unused;
-  Key(int32_t i_id_ = 0) : i_id(i_id_), unused(0) {}
+  int32_t i_im_id;
 };
 
 struct Value {
-  int32_t i_im_id;
   float i_price;
   char i_name[MAX_NAME + 1];
   char i_data[MAX_DATA + 1];
@@ -240,12 +241,15 @@ static constexpr float MAX_AMOUNT = 9999.99f;
 static const int REMOTE_PROBABILITY_MILLIS = 10;
 
 struct Key {
-  int32_t ol_o_id;
+  int32_t ol_d_w_id;
+  int32_t ol_l_id;  // one order can contain 15 unique order line, so we need
+                    // to add number after the order id
+                    // ol_l_id = o_id * 15 + number
+};
+struct Value {
   int32_t ol_d_id;
   int32_t ol_w_id;
   int32_t ol_number;
-};
-struct Value {
   int32_t ol_i_id;
   int32_t ol_supply_w_id;
   int32_t ol_quantity;
@@ -259,14 +263,12 @@ namespace NewOrder {
 static const int INITIAL_NUM_PER_DISTRICT = 900;
 
 struct Key {
+  int32_t no_d_w_id;
   int32_t no_o_id;
-  int32_t unused;
-  Key(int32_t no_o_id_ = 0) : no_o_id(no_o_id_) {}
 };
 
 struct Value {
-  int32_t no_w_id;
-  int32_t no_d_id;
+  char unused[8];
 };
 } // namespace NewOrder
 
@@ -279,7 +281,6 @@ static constexpr float INITIAL_AMOUNT = 10.00f;
 struct Key {
   int32_t h_c_id;
   int32_t unused;
-  Key(int32_t h_c_id_ = 0) : h_c_id(h_c_id_), unused(0) {}
 };
 struct Value {
   int32_t h_c_d_id;
