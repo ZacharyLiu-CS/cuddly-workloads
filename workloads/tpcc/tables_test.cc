@@ -8,17 +8,29 @@
 #include <iostream>
 #include <gtest/gtest.h>
 #include "tables.h"
+class TPCC_TABLE: public testing::Test {
+  public:
 
-TEST(TPCC_TABLE, TABLE_DEFINITION_SIZE_TEST){
-  EXPECT_EQ(sizeof(TPCC::Warehouse::Key), 8);
-  EXPECT_EQ(sizeof(TPCC::District::Key), 8);
-  EXPECT_EQ(sizeof(TPCC::Customer::Key), 8);
-  EXPECT_EQ(sizeof(TPCC::History::Key), 8);
-  EXPECT_EQ(sizeof(TPCC::NewOrder::Key), 8);
-  EXPECT_EQ(sizeof(TPCC::Order::Key), 8);
-  EXPECT_EQ(sizeof(TPCC::OrderLine::Key), 8);
-  EXPECT_EQ(sizeof(TPCC::Item::Key), 8);
-  EXPECT_EQ(sizeof(TPCC::Stock::Key), 8);
+
+  private:
+
+
+};
+
+TEST_F(TPCC_TABLE, TABLE_DEFINITION_SIZE_TEST){
+  EXPECT_EQ(sizeof(TPCC::warehouse_key_t), 8);
+  EXPECT_EQ(sizeof(TPCC::district_key_t), 8);
+  EXPECT_EQ(sizeof(TPCC::customer_key_t), 8);
+  EXPECT_EQ(sizeof(TPCC::history_key_t), 8);
+  EXPECT_EQ(sizeof(TPCC::new_order_key_t), 8);
+  EXPECT_EQ(sizeof(TPCC::order_key_t), 8);
+  EXPECT_EQ(sizeof(TPCC::order_line_key_t), 8);
+  EXPECT_EQ(sizeof(TPCC::item_key_t), 8);
+  EXPECT_EQ(sizeof(TPCC::stock_key_t), 8);
+}
+
+TEST_F(TPCC_TABLE, TABLE_CREATION){
+
 }
 
 int main(int argc, char **argv) {

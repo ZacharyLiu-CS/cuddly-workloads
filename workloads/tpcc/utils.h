@@ -1,5 +1,5 @@
 //
-// random.h
+// utils.h
 //
 // Created by Zacharyliu-CS on 07/12/2023.
 // Copyright (c) 2023 liuzhenm@mail.ustc.edu.cn.
@@ -7,8 +7,9 @@
 #pragma once
 #include <cstdint>
 #include <cassert>
+#include <string>
 
-namespace CW {
+namespace Utils {
 // generate random number int32_t and int64_t
 class Random {};
 class Rand {
@@ -38,7 +39,7 @@ private:
 };
 
 // Generate random number for workload testing
-static ALWAYS_INLINE uint32_t FastRand(uint64_t *seed) {
+inline static  uint32_t FastRand(uint64_t *seed) {
   *seed = *seed * 1103515245 + 12345;
   return (uint32_t)(*seed >> 32);
 }
@@ -103,4 +104,4 @@ private:
 
   unsigned long seed;
 };
-} // namespace CW
+} // namespace Utils 

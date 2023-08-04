@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 #2. define the name of project
-project(TPCCWorkload)
+project(tpcc_workload)
 
 #3. specify c++ compiler version
 set(CMAKE_CXX_STANDARD 17)
@@ -33,6 +33,7 @@ list(REMOVE_ITEM SOURCE_FILE ${MAIN_FILE})
 #7. define the executable
 add_executable(${PROJECT_NAME} ${MAIN_FILE} ${SOURCE_FILE})
 target_link_libraries(${PROJECT_NAME}
+  gflags
   )
 
 
@@ -48,7 +49,6 @@ if (GTEST_FOUND)
     add_executable( ${testname} ${testsourcefile} ${SOURCE_FILE})
     target_link_libraries(${testname}
       gtest
-      gflags
       )
     add_test(NAME ${testname} COMMAND ${testname})
   ENDFOREACH(testsourcefile ${TEST_FILE})
