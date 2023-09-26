@@ -10,11 +10,13 @@
 #include <gflags/gflags_declare.h>
 #include <iostream>
 
-DECLARE_bool(debug);
+namespace TPCC {
+
+DECLARE_bool(DEBUG);
 
 #define LOG(...)                                                               \
   do {                                                                         \
-    if (FLAGS_debug)                                                           \
+    if (FLAGS_DEBUG)                                                           \
       LogWrapper(__FILE__, "line ", __LINE__, " : ", __VA_ARGS__);             \
   } while (0)
 
@@ -25,3 +27,5 @@ inline void LogWrapper(First &&first, Rest &&...rest) {
   std::cerr << std::forward<First>(first) << " ";
   LogWrapper(std::forward<Rest>(rest)...);
 }
+
+};

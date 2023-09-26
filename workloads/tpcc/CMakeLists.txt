@@ -6,7 +6,7 @@ project(tpcc_workload)
 
 #3. specify c++ compiler version
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-std=c++17 -g -Wall -pthread ")
+set(CMAKE_CXX_FLAGS "-std=c++17 -g -pthread ")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 #4. head file path
@@ -49,6 +49,7 @@ if (GTEST_FOUND)
     add_executable( ${testname} ${testsourcefile} ${SOURCE_FILE})
     target_link_libraries(${testname}
       gtest
+      gflags
       )
     add_test(NAME ${testname} COMMAND ${testname})
   ENDFOREACH(testsourcefile ${TEST_FILE})
