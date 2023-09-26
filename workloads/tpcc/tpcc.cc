@@ -19,7 +19,7 @@ DEFINE_int32(FREQUENCY_ORDER_STATUS, 4,
 DEFINE_int32(FREQUENCY_DELIVERY, 4, "Default percentage of delivery txn.");
 DEFINE_int32(FREQUENCY_STOCK_LEVEL, 4,
              "Default percentage of stock-level txn.");
-}; // namespace TPCC
+} // namespace TPCC
 
 int main(int argc, char **argv) {
   google::SetUsageMessage("Usage message of pmem operation test:");

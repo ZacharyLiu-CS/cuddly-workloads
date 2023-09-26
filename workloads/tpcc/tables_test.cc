@@ -11,13 +11,25 @@
 
 namespace TPCC{
 DEFINE_bool(DEBUG, true, "Set if output log message.");
-};
+DEFINE_int32(NUM_WAREHOUSE, 10, "Set the num of warehouse.");
+DEFINE_int32(FREQUENCY_NEW_ORDER, 45, "Default percentage of new-order txn.");
+DEFINE_int32(FREQUENCY_PAYMENT, 43, "Default percentage of payment txn.");
+DEFINE_int32(FREQUENCY_ORDER_STATUS, 4,
+             "Default percentage of order-status txn.");
+DEFINE_int32(FREQUENCY_DELIVERY, 4, "Default percentage of delivery txn.");
+DEFINE_int32(FREQUENCY_STOCK_LEVEL, 4,
+             "Default percentage of stock-level txn.");
+}
+
 
 class TPCC_TABLE: public testing::Test {
   public:
-
+  uint64_t GenerateAllTables(){
+    tpcc_table.LoadTables();
+    return tpcc_table.GetLoadRecordCount();
+  }
   private:
-
+  TPCC::TPCCTable tpcc_table;
 
 };
 
@@ -34,7 +46,7 @@ TEST_F(TPCC_TABLE, TABLE_DEFINITION_SIZE_TEST){
 }
 
 TEST_F(TPCC_TABLE, TABLE_CREATION){
-
+  EXPECT_EQ(GenerateAllTables(), 6689729);
 }
 
 int main(int argc, char **argv) {

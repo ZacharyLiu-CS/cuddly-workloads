@@ -6,6 +6,7 @@
 //
 #include "tables.h"
 #include "config.h"
+#include <atomic>
 #include <cstdint>
 #include <set>
 #include <string>
@@ -13,12 +14,26 @@
 
 namespace TPCC {
 
+void TPCCTable::LoadTables() {
+  LOG("num_warehouse_ = ", num_warehouse_,
+      ", num_district_per_warehouse_ = ", num_district_per_warehouse_,
+      ", num_customer_per_district_ = ", num_customer_per_district_, "\n");
+
+  PopulateWarehouseTable(9324);
+  PopulateDistrictTable(129856349);
+  PopulateCustomerAndHistoryTable(923587856425);
+  PopulateOrderNewOrderAndOrderLineTable(2343352);
+  PopulateStockTable(89785943);
+  PopulateItemTable(235443);
+  PopulateStockTable(89785943);
+}
+
 void TPCCTable::PopulateWarehouseTable(unsigned long seed) {
   int total_warehouse_records_inserted = 0,
       total_warehouse_records_examined = 0;
   FastRandom random_generator(seed);
   // populate warehouse table
-  for (uint32_t w_id = 1; w_id <= num_warehouse; w_id++) {
+  for (uint32_t w_id = 1; w_id <= num_warehouse_; w_id++) {
     tpcc_warehouse_key_t warehouse_key;
     warehouse_key.w_id = w_id;
 
@@ -67,8 +82,8 @@ void TPCCTable::PopulateWarehouseTable(unsigned long seed) {
 void TPCCTable::PopulateDistrictTable(unsigned long seed) {
   int total_district_records_inserted = 0, total_district_records_examined = 0;
   FastRandom random_generator(seed);
-  for (uint32_t w_id = 1; w_id <= num_warehouse; w_id++) {
-    for (uint32_t d_id = 1; d_id <= num_district_per_warehouse; d_id++) {
+  for (uint32_t w_id = 1; w_id <= num_warehouse_; w_id++) {
+    for (uint32_t d_id = 1; d_id <= num_district_per_warehouse_; d_id++) {
       tpcc_district_key_t district_key;
       district_key.d_id = MakeDistrictKey(w_id, d_id);
 
@@ -81,7 +96,7 @@ void TPCCTable::PopulateDistrictTable(unsigned long seed) {
       //  D_YTD = sum(H_AMOUNT) where (D_W_ID, D_ID) = (H_W_ID, H_D_ID).
       district_val.d_tax =
           (float)RandomNumber(random_generator, 0, 2000) / 10000.0;
-      district_val.d_next_o_id = num_customer_per_district + 1;
+      district_val.d_next_o_id = num_customer_per_district_ + 1;
       //  NOTICE:: scale should check consistency requirements.
       //  D_NEXT_O_ID - 1 = max(O_ID) = max(NO_O_ID)
 
@@ -127,12 +142,10 @@ void TPCCTable::PopulateCustomerAndHistoryTable(unsigned long seed) {
   // total_customer_records_examined = %d\n",
   //        total_customer_records_inserted, total_customer_records_examined);
   FastRandom random_generator(seed);
-  printf("num_warehouse = %d, num_district_per_warehouse = %d, "
-         "num_customer_per_district = %d\n",
-         num_warehouse, num_district_per_warehouse, num_customer_per_district);
-  for (uint32_t w_id = 1; w_id <= num_warehouse; w_id++) {
-    for (uint32_t d_id = 1; d_id <= num_district_per_warehouse; d_id++) {
-      for (uint32_t c_id = 1; c_id <= num_customer_per_district; c_id++) {
+
+  for (uint32_t w_id = 1; w_id <= num_warehouse_; w_id++) {
+    for (uint32_t d_id = 1; d_id <= num_district_per_warehouse_; d_id++) {
+      for (uint32_t c_id = 1; c_id <= num_customer_per_district_; c_id++) {
         tpcc_customer_key_t customer_key;
         customer_key.c_id = MakeCustomerKey(w_id, d_id, c_id);
 
@@ -144,7 +157,7 @@ void TPCCTable::PopulateCustomerAndHistoryTable(unsigned long seed) {
         else
           strcpy(customer_val.c_credit, "GC");
         std::string c_last;
-        if (c_id <= num_customer_per_district / 3) {
+        if (c_id <= num_customer_per_district_ / 3) {
           c_last.assign(GetCustomerLastName(random_generator, c_id - 1));
           strcpy(customer_val.c_last, c_last.c_str());
         } else {
@@ -211,8 +224,9 @@ void TPCCTable::PopulateCustomerAndHistoryTable(unsigned long seed) {
         // total_customer_records_inserted, total_customer_records_examined);
 
         tpcc_customer_index_key_t customer_index_key;
-        //TODO:: MakeCustomerIndexKey may have some problem 
-        //        even the same <w_id, d_id, c_last, c_first> will cause different customer_index_key
+        // TODO:: MakeCustomerIndexKey may have some problem
+        //        even the same <w_id, d_id, c_last, c_first> will cause
+        //        different customer_index_key
         customer_index_key.item_key =
             MakeCustomerIndexKey(w_id, d_id, c_last, c_first);
 
@@ -267,35 +281,35 @@ void TPCCTable::PopulateCustomerAndHistoryTable(unsigned long seed) {
 }
 
 void TPCCTable::PopulateOrderNewOrderAndOrderLineTable(unsigned long seed) {
-  int total_order_records_inserted = 0, total_order_records_examined = 0;
-  int total_order_index_records_inserted = 0,
-      total_order_index_records_examined = 0;
-  int total_new_order_records_inserted = 0,
-      total_new_order_records_examined = 0;
-  int total_order_line_records_inserted = 0,
-      total_order_line_records_examined = 0;
+  uint64_t total_order_records_inserted = 0, total_order_records_examined = 0;
+  uint64_t total_order_index_records_inserted = 0,
+           total_order_index_records_examined = 0;
+  uint64_t total_new_order_records_inserted = 0,
+           total_new_order_records_examined = 0;
+  uint64_t total_order_line_records_inserted = 0,
+           total_order_line_records_examined = 0;
   FastRandom random_generator(seed);
   // printf("total_order_records_inserted = %d, total_order_records_examined =
   // %d\n", total_order_records_inserted, total_order_records_examined);
-  for (uint32_t w_id = 1; w_id <= num_warehouse; w_id++) {
-    for (uint32_t d_id = 1; d_id <= num_district_per_warehouse; d_id++) {
+  for (uint32_t w_id = 1; w_id <= num_warehouse_; w_id++) {
+    for (uint32_t d_id = 1; d_id <= num_district_per_warehouse_; d_id++) {
       std::set<uint32_t> c_ids_s;
       std::vector<uint32_t> c_ids;
-      while (c_ids.size() != num_customer_per_district) {
+      while (c_ids.size() != num_customer_per_district_) {
         const auto x =
-            (random_generator.Next() % num_customer_per_district) + 1;
+            (random_generator.Next() % num_customer_per_district_) + 1;
         if (c_ids_s.count(x))
           continue;
         c_ids_s.insert(x);
         c_ids.emplace_back(x);
       }
-      for (uint32_t c = 1; c <= num_customer_per_district; c++) {
+      for (uint32_t c = 1; c <= num_customer_per_district_; c++) {
         tpcc_order_key_t order_key;
         order_key.o_id = MakeOrderKey(w_id, d_id, c);
 
         tpcc_order_val_t order_val;
         order_val.o_c_id = c_ids[c - 1];
-        if (c <= num_customer_per_district * 0.7)
+        if (c <= num_customer_per_district_ * 0.7)
           order_val.o_carrier_id =
               RandomNumber(random_generator, tpcc_order_val_t::MIN_CARRIER_ID,
                            tpcc_order_val_t::MAX_CARRIER_ID);
@@ -338,7 +352,7 @@ void TPCCTable::PopulateOrderNewOrderAndOrderLineTable(unsigned long seed) {
         }
 
         if (c >
-            num_customer_per_district *
+            num_customer_per_district_ *
                 tpcc_new_order_val_t::SCALE_CONSTANT_BETWEEN_NEWORDER_ORDER) {
           // MZ-Notation: must obey the relationship between the numbers of
           // entries in Order and New-Order specified in tpcc docs The number of
@@ -362,8 +376,8 @@ void TPCCTable::PopulateOrderNewOrderAndOrderLineTable(unsigned long seed) {
           order_line_key.ol_id = MakeOrderLineKey(w_id, d_id, c, l);
 
           tpcc_order_line_val_t order_line_val;
-          order_line_val.ol_i_id = RandomNumber(random_generator, 1, num_item);
-          if (c <= num_customer_per_district * 0.7) {
+          order_line_val.ol_i_id = RandomNumber(random_generator, 1, num_item_);
+          if (c <= num_customer_per_district_ * 0.7) {
             order_line_val.ol_delivery_d = order_val.o_entry_d;
             order_line_val.ol_amount = 0;
           } else {
@@ -380,7 +394,7 @@ void TPCCTable::PopulateOrderNewOrderAndOrderLineTable(unsigned long seed) {
 
           order_line_val.debug_magic = tpcc_add_magic;
           assert(order_line_val.ol_i_id >= 1 &&
-                 static_cast<size_t>(order_line_val.ol_i_id) <= num_item);
+                 static_cast<size_t>(order_line_val.ol_i_id) <= num_item_);
           total_order_line_records_inserted +=
               LoadRecord(order_line_key.item_key, (void *)&order_line_val,
                          sizeof(tpcc_order_line_val_t));
@@ -403,7 +417,7 @@ void TPCCTable::PopulateItemTable(unsigned long seed) {
   //    %d\n",
   //           total_item_records_inserted, total_item_records_examined);
   FastRandom random_generator(seed);
-  for (int64_t i_id = 1; i_id <= num_item; i_id++) {
+  for (int64_t i_id = 1; i_id <= num_item_; i_id++) {
     tpcc_item_key_t item_key;
     item_key.i_id = i_id;
 
@@ -441,9 +455,9 @@ void TPCCTable::PopulateItemTable(unsigned long seed) {
 }
 
 void TPCCTable::PopulateStockTable(unsigned long seed) {
-      int total_stock_records_inserted = 0, total_stock_records_examined = 0;
-  for (uint32_t w_id = 1; w_id <= num_warehouse; w_id++) {
-    for (uint32_t i_id = 1; i_id <= num_item; i_id++) {
+  int total_stock_records_inserted = 0, total_stock_records_examined = 0;
+  for (uint32_t w_id = 1; w_id <= num_warehouse_; w_id++) {
+    for (uint32_t i_id = 1; i_id <= num_item_; i_id++) {
       tpcc_stock_key_t stock_key;
       stock_key.s_id = MakeStockKey(w_id, i_id);
 
@@ -455,27 +469,37 @@ void TPCCTable::PopulateStockTable(unsigned long seed) {
       stock_val.s_order_cnt = 0;
       stock_val.s_remote_cnt = 0;
 
-      const int len = RandomNumber(random_generator, tpcc_stock_val_t::MIN_DATA, tpcc_stock_val_t::MAX_DATA);
+      const int len = RandomNumber(random_generator, tpcc_stock_val_t::MIN_DATA,
+                                   tpcc_stock_val_t::MAX_DATA);
       if (RandomNumber(random_generator, 1, 100) > 10) {
         const std::string s_data = RandomStr(random_generator, len);
         strcpy(stock_val.s_data, s_data.c_str());
       } else {
         const int startOriginal = RandomNumber(random_generator, 2, (len - 8));
-        const std::string s_data = RandomStr(random_generator, startOriginal) + "ORIGINAL" + RandomStr(random_generator, len - startOriginal - 8);
+        const std::string s_data =
+            RandomStr(random_generator, startOriginal) + "ORIGINAL" +
+            RandomStr(random_generator, len - startOriginal - 8);
         strcpy(stock_val.s_data, s_data.c_str());
       }
 
       stock_val.debug_magic = tpcc_add_magic;
-      total_stock_records_inserted += LoadRecord(stock_key.item_key,
-                                                 (void*)&stock_val,
-                                                 sizeof(tpcc_stock_val_t));
+      total_stock_records_inserted += LoadRecord(
+          stock_key.item_key, (void *)&stock_val, sizeof(tpcc_stock_val_t));
       total_stock_records_examined++;
-      // printf("total_stock_records_inserted = %d, total_stock_records_examined = %d\n", total_stock_records_inserted, total_stock_records_examined);
+      // printf("total_stock_records_inserted = %d, total_stock_records_examined
+      // = %d\n", total_stock_records_inserted, total_stock_records_examined);
     }
   }
-  // printf("total_stock_records_inserted = %d, total_stock_records_examined = %d\n", total_stock_records_inserted, total_stock_records_examined);
+  // printf("total_stock_records_inserted = %d, total_stock_records_examined =
+  // %d\n", total_stock_records_inserted, total_stock_records_examined);
 }
 
-int TPCCTable::LoadRecord(itemkey_t item_key, void *val_ptr, size_t val_size) {}
-DataItem *TPCCTable::GetRecord(itemkey_t item_key) {}
+int TPCCTable::LoadRecord(itemkey_t item_key, void *val_ptr, size_t val_size) {
+  write_record_count_.fetch_add(1, std::memory_order_relaxed);
+  return 1;
+}
+DataItem *TPCCTable::GetRecord(itemkey_t item_key) {
+  read_record_count_.fetch_add(1, std::memory_order_relaxed);
+  return nullptr;
+}
 } // namespace TPCC

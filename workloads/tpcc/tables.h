@@ -5,419 +5,57 @@
 // Copyright (c) 2023 liuzhenm@mail.ustc.edu.cn.
 //
 #pragma once
-#include <cstdint>
-#include <cstring>
-#include <string>
-#include <vector>
 
-#include "config.h"
-#include "utils.h"
-
-using Utils::FastRandom;
+#include "schemas.h"
+#include <atomic>
 
 namespace TPCC {
-
-// reference: https://github.com/evanj/tpccbench/
-// Just a container for constants
-static int g_uniform_item_dist = 0;
-
-static int g_new_order_remote_item_pct = 1;
-
-static int g_mico_dist_num = 20;
-
-static const size_t CustomerLastNameMaxSize = 16;
-
-static std::string NameTokens[10] = {
-    std::string("BAR"),  std::string("OUGHT"), std::string("ABLE"),
-    std::string("PRI"),  std::string("PRES"),  std::string("ESE"),
-    std::string("ANTI"), std::string("CALLY"), std::string("ATION"),
-    std::string("EING"),
-};
-
-const char GOOD_CREDIT[] = "GC";
-
-const char BAD_CREDIT[] = "BC";
-
-static const int DUMMY_SIZE = 12;
-
-static const int DIST = 24;
-
-// Constants
-struct Address {
-  static const int MIN_STREET = 10; // W_STREET_1 random a-string [10 .. 20]
-                                    // W_STREET_2 random a-string [10 .. 20]
-  static const int MAX_STREET = 20;
-  static const int MIN_CITY = 10; // W_CITY random a-string [10 .. 20]
-  static const int MAX_CITY = 20;
-  static const int STATE = 2; // W_STATE random a-string of 2 letters
-  static const int ZIP = 9;   // ZIP a-string of 9 letters
-};
-
-/******************** TPCC table definitions (Schemas of key and value) start
- * **********************/
-/*
- * Warehouse table
- * Primary key: <int32_t w_id>
- */
-
-union tpcc_warehouse_key_t {
-  struct {
-    int32_t w_id;
-    uint8_t unused[4];
-  };
-  itemkey_t item_key;
-
-  tpcc_warehouse_key_t() { item_key = 0; }
-};
-
-static_assert(sizeof(tpcc_warehouse_key_t) == sizeof(itemkey_t), "");
-
-struct tpcc_warehouse_val_t {
-  static const int MIN_NAME = 6;
-  static const int MAX_NAME = 10;
-
-  float w_tax;
-  float w_ytd;
-  char w_name[MAX_NAME + 1];
-  char w_street_1[Address::MAX_STREET + 1];
-  char w_street_2[Address::MAX_STREET + 1];
-  char w_city[Address::MAX_CITY + 1];
-  char w_state[Address::STATE + 1];
-  char w_zip[Address::ZIP + 1];
-};
-
-static_assert(sizeof(tpcc_warehouse_val_t) == 96, "");
-
-/*
- * District table
- * Primary key: <int32_t d_id, int32_t d_w_id>
- */
-
-union tpcc_district_key_t {
-  struct {
-    int64_t d_id;
-  };
-  itemkey_t item_key;
-
-  tpcc_district_key_t() { item_key = 0; }
-};
-
-static_assert(sizeof(tpcc_district_key_t) == sizeof(itemkey_t), "");
-
-struct tpcc_district_val_t {
-  static const int MIN_NAME = 6;
-  static const int MAX_NAME = 10;
-
-  float d_tax;
-  float d_ytd;
-  int32_t d_next_o_id;
-  char d_name[MAX_NAME + 1];
-  char d_street_1[Address::MAX_STREET + 1];
-  char d_street_2[Address::MAX_STREET + 1];
-  char d_city[Address::MAX_CITY + 1];
-  char d_state[Address::STATE + 1];
-  char d_zip[Address::ZIP + 1];
-};
-
-static_assert(sizeof(tpcc_district_val_t) == 100, "");
-
-/*
- * Customer table
- * Primary key: <int32_t c_id, int32_t c_d_id, int32_t c_w_id>
- */
-
-union tpcc_customer_key_t {
-  int64_t c_id;
-  itemkey_t item_key;
-
-  tpcc_customer_key_t() { item_key = 0; }
-};
-
-static_assert(sizeof(tpcc_customer_key_t) == sizeof(itemkey_t), "");
-
-struct tpcc_customer_val_t {
-  static const int MIN_FIRST = 8; // C_FIRST random a-string [8 .. 16]
-  static const int MAX_FIRST = 16;
-  static const int MIDDLE = 2;
-  static const int MAX_LAST = 16;
-  static const int PHONE = 16; // C_PHONE random n-string of 16 numbers
-  static const int CREDIT = 2;
-  static const int MIN_DATA = 300; // C_DATA random a-string [300 .. 500]
-  static const int MAX_DATA = 500;
-
-  float c_credit_lim;
-  float c_discount;
-  float c_balance;
-  float c_ytd_payment;
-  int32_t c_payment_cnt;
-  int32_t c_delivery_cnt;
-  char c_first[MAX_FIRST + 1];
-  char c_middle[MIDDLE + 1];
-  char c_last[MAX_LAST + 1];
-  char c_street_1[Address::MAX_STREET + 1];
-  char c_street_2[Address::MAX_STREET + 1];
-  char c_city[Address::MAX_CITY + 1];
-  char c_state[Address::STATE + 1];
-  char c_zip[Address::ZIP + 1];
-  char c_phone[PHONE + 1];
-  uint32_t c_since;
-  char c_credit[CREDIT + 1];
-  char c_data[MAX_DATA + 1];
-};
-
-static_assert(sizeof(tpcc_customer_val_t) == 664, "");
-
-union tpcc_customer_index_key_t {
-  struct {
-    uint64_t c_index_id;
-  };
-  itemkey_t item_key;
-
-  tpcc_customer_index_key_t() { item_key = 0; }
-};
-
-static_assert(sizeof(tpcc_customer_index_key_t) == sizeof(itemkey_t), "");
-
-struct tpcc_customer_index_val_t {
-  int64_t c_id;
-  int64_t debug_magic;
-};
-
-static_assert(sizeof(tpcc_customer_index_val_t) == 16, ""); // add debug magic
-// static_assert(sizeof(tpcc_customer_index_val_t) == 8, "");
-
-/*
- * History table
- * Primary key: none
- */
-
-union tpcc_history_key_t {
-  int64_t h_id;
-  itemkey_t item_key;
-
-  tpcc_history_key_t() { item_key = 0; }
-};
-
-static_assert(sizeof(tpcc_history_key_t) == sizeof(itemkey_t), "");
-
-struct tpcc_history_val_t {
-  static const int MIN_DATA =
-      12; // H_DATA random a-string [12 .. 24] from TPCC documents 5.11
-  static const int MAX_DATA = 24;
-
-  float h_amount;
-  uint32_t h_date;
-  char h_data[MAX_DATA + 1];
-};
-
-static_assert(sizeof(tpcc_history_val_t) == 36, "");
-
-/*
- * NewOrder table
- * Primary key: <int32_t no_w_id, int32_t no_d_id, int32_t no_o_id>
- */
-union tpcc_new_order_key_t {
-  int64_t no_id;
-  itemkey_t item_key;
-
-  tpcc_new_order_key_t() { item_key = 0; }
-};
-
-static_assert(sizeof(tpcc_new_order_key_t) == sizeof(itemkey_t), "");
-
-struct tpcc_new_order_val_t {
-  static constexpr double SCALE_CONSTANT_BETWEEN_NEWORDER_ORDER = 0.7;
-
-  char no_dummy[DUMMY_SIZE + 1];
-  int64_t debug_magic;
-};
-
-static_assert(sizeof(tpcc_new_order_val_t) == 24, ""); // add debug magic
-// static_assert(sizeof(tpcc_new_order_val_t) == 13, "");
-
-/*
- * Order table
- * Primary key: <int32_t o_w_id, int32_t o_d_id, int32_t o_id>
- */
-union tpcc_order_key_t {
-  int64_t o_id;
-  itemkey_t item_key;
-
-  tpcc_order_key_t() { item_key = 0; }
-};
-
-static_assert(sizeof(tpcc_order_key_t) == sizeof(itemkey_t), "");
-
-struct tpcc_order_val_t {
-  static const int MIN_CARRIER_ID = 1;
-  static const int MAX_CARRIER_ID = 10; // number of distinct per warehouse
-
-  int32_t o_c_id;
-  int32_t o_carrier_id;
-  int32_t o_ol_cnt;
-  int32_t o_all_local;
-  uint32_t o_entry_d;
-};
-
-static_assert(sizeof(tpcc_order_val_t) == 20, "");
-
-union tpcc_order_index_key_t {
-  int64_t o_index_id;
-  itemkey_t item_key;
-
-  tpcc_order_index_key_t() { item_key = 0; }
-};
-
-static_assert(sizeof(tpcc_order_index_key_t) == sizeof(itemkey_t), "");
-
-struct tpcc_order_index_val_t {
-  uint64_t o_id;
-  int64_t debug_magic;
-};
-
-static_assert(sizeof(tpcc_order_index_val_t) == 16, ""); // add debug magic
-// static_assert(sizeof(tpcc_order_index_val_t) == 8, "");
-
-/*
- * OrderLine table
- * Primary key: <int32_t ol_o_id, int32_t ol_d_id, int32_t ol_w_id, int32_t
- * ol_number>
- */
-
-union tpcc_order_line_key_t {
-  int64_t ol_id;
-  itemkey_t item_key;
-
-  tpcc_order_line_key_t() { item_key = 0; }
-};
-
-static_assert(sizeof(tpcc_order_line_key_t) == sizeof(itemkey_t), "");
-
-struct tpcc_order_line_val_t {
-  static const int MIN_OL_CNT = 5;
-  static const int MAX_OL_CNT = 15;
-
-  int32_t ol_i_id;
-  int32_t ol_supply_w_id;
-  int32_t ol_quantity;
-  float ol_amount;
-  uint32_t ol_delivery_d;
-  char ol_dist_info[DIST + 1];
-  int64_t debug_magic;
-};
-
-static_assert(sizeof(tpcc_order_line_val_t) == 56, ""); // add debug magic
-// static_assert(sizeof(tpcc_order_line_val_t) == 48, "");
-
-/*
- * Item table
- * Primary key: <int32_t i_id>
- */
-
-union tpcc_item_key_t {
-  struct {
-    int64_t i_id;
-  };
-  itemkey_t item_key;
-
-  tpcc_item_key_t() { item_key = 0; }
-};
-
-static_assert(sizeof(tpcc_item_key_t) == sizeof(itemkey_t), "");
-
-struct tpcc_item_val_t {
-  static const int MIN_NAME = 14; // I_NAME random a-string [14 .. 24]
-  static const int MAX_NAME = 24;
-  static const int MIN_DATA = 26;
-  static const int MAX_DATA = 50; // I_DATA random a-string [26 .. 50]
-
-  static const int MIN_IM = 1;
-  static const int MAX_IM = 10000;
-
-  int32_t i_im_id;
-  float i_price;
-  char i_name[MAX_NAME + 1];
-  char i_data[MAX_DATA + 1];
-  int64_t debug_magic;
-};
-
-static_assert(sizeof(tpcc_item_val_t) == 96, ""); // add debug magic
-// static_assert(sizeof(tpcc_item_val_t) == 84, "");
-
-/*
- * Stock table
- * Primary key: <int32_t s_i_id, int32_t s_w_id>
- */
-
-union tpcc_stock_key_t {
-  struct {
-    int64_t s_id;
-  };
-  itemkey_t item_key;
-
-  tpcc_stock_key_t() { item_key = 0; }
-};
-
-static_assert(sizeof(tpcc_stock_key_t) == sizeof(itemkey_t), "");
-
-struct tpcc_stock_val_t {
-  static const int MIN_DATA = 26;
-  static const int MAX_DATA = 50;
-  static const int32_t MIN_STOCK_LEVEL_THRESHOLD = 10;
-  static const int32_t MAX_STOCK_LEVEL_THRESHOLD = 20;
-  static const int STOCK_LEVEL_ORDERS = 20;
-
-  int32_t s_quantity;
-  int32_t s_ytd;
-  int32_t s_order_cnt;
-  int32_t s_remote_cnt;
-  char s_dist[NUM_DISTRICT_PER_WAREHOUSE][DIST + 1];
-  char s_data[MAX_DATA + 1];
-  int64_t debug_magic;
-};
-
-static_assert(sizeof(tpcc_stock_val_t) == 328, ""); // add debug magic
-// static_assert(sizeof(tpcc_stock_val_t) == 320, "");
-
 class TPCCTable {
 private:
   // Pre-defined constants, which will be modified for tests
-  uint32_t num_warehouse = 0;
-  uint32_t num_district_per_warehouse = 0;
-  uint32_t num_customer_per_district = 0;
-  uint32_t num_item = 0;
-  uint32_t num_stock_per_warehouse = 0;
+  uint32_t num_warehouse_ = 0;
+  uint32_t num_district_per_warehouse_ = 0;
+  uint32_t num_customer_per_district_ = 0;
+  uint32_t num_item_ = 0;
+  uint32_t num_stock_per_warehouse_ = 0;
+
+  std::atomic_uint64_t write_record_count_ = 0;
+  std::atomic_uint64_t read_record_count_ = 0;
 
 public:
   TPCCTable() {
-    uint32_t num_warehouse = FLAGS_NUM_WAREHOUSE;
-    uint32_t num_district_per_warehouse = NUM_DISTRICT_PER_WAREHOUSE;
-    uint32_t num_customer_per_district = NUM_CUSTOMER_PER_DISTRICT;
-    uint32_t num_item = NUM_ITEM;
-    uint32_t num_stock_per_warehouse = NUM_STOCK_PER_WAREHOUSE;
+    num_warehouse_ = FLAGS_NUM_WAREHOUSE;
+    num_district_per_warehouse_ = NUM_DISTRICT_PER_WAREHOUSE;
+    num_customer_per_district_ = NUM_CUSTOMER_PER_DISTRICT;
+    num_item_ = NUM_ITEM;
+    num_stock_per_warehouse_ = NUM_STOCK_PER_WAREHOUSE;
   }
+  uint32_t GetNumWarehouse() { return num_warehouse_; }
+  uint32_t GetNumDistrictPerWareHouse() { return num_district_per_warehouse_; }
+  uint32_t GetNumCustomerPerDistrict() { return num_customer_per_district_; }
+  uint32_t GetNumItem() { return num_item_; }
+  uint32_t GetNumStockPerWarehouse() { return num_stock_per_warehouse_; }
 
   // For server-side usage
+  uint64_t GetLoadRecordCount() { return write_record_count_.load(); }
+  uint64_t GetReadRecordCount() { return read_record_count_.load(); }
 
+  void LoadTables();
 
   void PopulateWarehouseTable(unsigned long seed);
 
   void PopulateDistrictTable(unsigned long seed);
 
-  void PopulateCustomerAndHistoryTable(
-      unsigned long seed);
+  void PopulateCustomerAndHistoryTable(unsigned long seed);
 
-  void PopulateOrderNewOrderAndOrderLineTable(
-      unsigned long seed);
+  void PopulateOrderNewOrderAndOrderLineTable(unsigned long seed);
 
   void PopulateItemTable(unsigned long seed);
 
   void PopulateStockTable(unsigned long seed);
 
-  int LoadRecord(itemkey_t item_key, void *val_ptr,
-                 size_t val_size);
+  int LoadRecord(itemkey_t item_key, void *val_ptr, size_t val_size);
   DataItem *GetRecord(itemkey_t item_key);
-
 
   /* Followng pieces of codes mainly comes from Silo */
   inline uint32_t GetCurrentTimeMillis() {
@@ -447,15 +85,15 @@ public:
 
   inline int64_t GetItemId(FastRandom &r) {
     return CheckBetweenInclusive(
-        g_uniform_item_dist ? RandomNumber(r, 1, num_item)
-                            : NonUniformRandom(r, 8191, 7911, 1, num_item),
-        1, num_item);
+        g_uniform_item_dist ? RandomNumber(r, 1, num_item_)
+                            : NonUniformRandom(r, 8191, 7911, 1, num_item_),
+        1, num_item_);
   }
 
   inline int GetCustomerId(FastRandom &r) {
     return CheckBetweenInclusive(
-        NonUniformRandom(r, 1023, 259, 1, num_customer_per_district), 1,
-        num_customer_per_district);
+        NonUniformRandom(r, 1023, 259, 1, num_customer_per_district_), 1,
+        num_customer_per_district_);
   }
 
   // pick a number between [start, end)
@@ -539,14 +177,14 @@ public:
   }
 
   inline int64_t MakeDistrictKey(int32_t w_id, int32_t d_id) {
-    int32_t did = d_id + (w_id * num_district_per_warehouse);
+    int32_t did = d_id + (w_id * num_district_per_warehouse_);
     int64_t id = static_cast<int64_t>(did);
     // assert(districtKeyToWare(id) == w_id);
     return id;
   }
 
   inline int64_t MakeCustomerKey(int32_t w_id, int32_t d_id, int32_t c_id) {
-    int32_t upper_id = w_id * num_district_per_warehouse + d_id;
+    int32_t upper_id = w_id * num_district_per_warehouse_ + d_id;
     int64_t id =
         static_cast<int64_t>(upper_id) << 32 | static_cast<int64_t>(c_id);
     // assert(customerKeyToWare(id) == w_id);
@@ -572,7 +210,7 @@ public:
                                        std::string s_last,
                                        std::string s_first) {
     uint64_t *seckey = new uint64_t[5];
-    int32_t did = d_id + (w_id * num_district_per_warehouse);
+    int32_t did = d_id + (w_id * num_district_per_warehouse_);
     seckey[0] = did;
     ConvertString((char *)(&seckey[1]), s_last.data(), s_last.size());
     ConvertString((char *)(&seckey[3]), s_first.data(), s_first.size());
@@ -582,23 +220,23 @@ public:
   inline int64_t MakeHistoryKey(int32_t h_w_id, int32_t h_d_id,
                                 int32_t h_c_w_id, int32_t h_c_d_id,
                                 int32_t h_c_id) {
-    int32_t cid = (h_c_w_id * num_district_per_warehouse + h_c_d_id) *
-                      num_customer_per_district +
+    int32_t cid = (h_c_w_id * num_district_per_warehouse_ + h_c_d_id) *
+                      num_customer_per_district_ +
                   h_c_id;
-    int32_t did = h_d_id + (h_w_id * num_district_per_warehouse);
+    int32_t did = h_d_id + (h_w_id * num_district_per_warehouse_);
     int64_t id = static_cast<int64_t>(cid) << 20 | static_cast<int64_t>(did);
     return id;
   }
 
   inline int64_t MakeNewOrderKey(int32_t w_id, int32_t d_id, int32_t o_id) {
-    int32_t upper_id = w_id * num_district_per_warehouse + d_id;
+    int32_t upper_id = w_id * num_district_per_warehouse_ + d_id;
     int64_t id =
         static_cast<int64_t>(upper_id) << 32 | static_cast<int64_t>(o_id);
     return id;
   }
 
   inline int64_t MakeOrderKey(int32_t w_id, int32_t d_id, int32_t o_id) {
-    int32_t upper_id = w_id * num_district_per_warehouse + d_id;
+    int32_t upper_id = w_id * num_district_per_warehouse_ + d_id;
     int64_t id =
         static_cast<int64_t>(upper_id) << 32 | static_cast<int64_t>(o_id);
     // assert(orderKeyToWare(id) == w_id);
@@ -607,9 +245,9 @@ public:
 
   inline int64_t MakeOrderIndexKey(int32_t w_id, int32_t d_id, int32_t c_id,
                                    int32_t o_id) {
-    int32_t upper_id =
-        (w_id * num_district_per_warehouse + d_id) * num_customer_per_district +
-        c_id;
+    int32_t upper_id = (w_id * num_district_per_warehouse_ + d_id) *
+                           num_customer_per_district_ +
+                       c_id;
     int64_t id =
         static_cast<int64_t>(upper_id) << 32 | static_cast<int64_t>(o_id);
     return id;
@@ -617,7 +255,7 @@ public:
 
   inline int64_t MakeOrderLineKey(int32_t w_id, int32_t d_id, int32_t o_id,
                                   int32_t number) {
-    int32_t upper_id = w_id * num_district_per_warehouse + d_id;
+    int32_t upper_id = w_id * num_district_per_warehouse_ + d_id;
     // 10000000 is the MAX ORDER ID
     int64_t oid =
         static_cast<int64_t>(upper_id) * 10000000 + static_cast<int64_t>(o_id);
@@ -628,7 +266,7 @@ public:
   }
 
   inline int64_t MakeStockKey(int32_t w_id, int32_t i_id) {
-    int32_t item_id = i_id + (w_id * num_stock_per_warehouse);
+    int32_t item_id = i_id + (w_id * num_stock_per_warehouse_);
     int64_t s_id = static_cast<int64_t>(item_id);
     // assert(stockKeyToWare(id) == w_id);
     return s_id;
