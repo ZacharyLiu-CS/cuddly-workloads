@@ -6,12 +6,12 @@
 //
 #pragma once
 
-#include "schemas.h"
 #include <atomic>
+#include "schemas.h"
 
 namespace TPCC {
 class TPCCTable {
-private:
+ private:
   // Pre-defined constants, which will be modified for tests
   uint32_t num_warehouse_ = 0;
   uint32_t num_district_per_warehouse_ = 0;
@@ -22,7 +22,7 @@ private:
   std::atomic_uint64_t write_record_count_ = 0;
   std::atomic_uint64_t read_record_count_ = 0;
 
-public:
+ public:
   TPCCTable() {
     num_warehouse_ = FLAGS_NUM_WAREHOUSE;
     num_district_per_warehouse_ = NUM_DISTRICT_PER_WAREHOUSE;
@@ -54,9 +54,21 @@ public:
 
   void PopulateStockTable(unsigned long seed);
 
-  int LoadRecord(itemkey_t item_key, void *val_ptr, size_t val_size);
-  DataItem *GetRecord(itemkey_t item_key);
+  // -1 means fail, else means success
+  template <typename T>
+  int PutRecord(itemkey_t item_key, T* val_ptr) {
+    write_record_count_ += 1;
+    return 1;
+  }
 
+  // -1 means fail, else means success
+  template <typename T>
+  int GetRecord(itemkey_t item_key, T* val_ptr) {
+    read_record_count_ += 1;
+    return 1;
+  }
+
+ public:
   /* Followng pieces of codes mainly comes from Silo */
   inline uint32_t GetCurrentTimeMillis() {
     // XXX(stephentu): implement a scalable GetCurrentTimeMillis()
@@ -72,32 +84,32 @@ public:
     return v;
   }
 
-  inline int RandomNumber(FastRandom &r, int min, int max) {
+  inline int RandomNumber(FastRandom& r, int min, int max) {
     return CheckBetweenInclusive((int)(r.NextUniform() * (max - min + 1) + min),
                                  min, max);
   }
 
-  inline int NonUniformRandom(FastRandom &r, int A, int C, int min, int max) {
+  inline int NonUniformRandom(FastRandom& r, int A, int C, int min, int max) {
     return (((RandomNumber(r, 0, A) | RandomNumber(r, min, max)) + C) %
             (max - min + 1)) +
            min;
   }
 
-  inline int64_t GetItemId(FastRandom &r) {
+  inline int64_t GetItemId(FastRandom& r) {
     return CheckBetweenInclusive(
         g_uniform_item_dist ? RandomNumber(r, 1, num_item_)
                             : NonUniformRandom(r, 8191, 7911, 1, num_item_),
         1, num_item_);
   }
 
-  inline int GetCustomerId(FastRandom &r) {
+  inline int GetCustomerId(FastRandom& r) {
     return CheckBetweenInclusive(
         NonUniformRandom(r, 1023, 259, 1, num_customer_per_district_), 1,
         num_customer_per_district_);
   }
 
   // pick a number between [start, end)
-  inline unsigned PickWarehouseId(FastRandom &r, unsigned start, unsigned end) {
+  inline unsigned PickWarehouseId(FastRandom& r, unsigned start, unsigned end) {
     assert(start < end);
     const unsigned diff = end - start;
     if (diff == 1)
@@ -105,11 +117,11 @@ public:
     return (r.Next() % diff) + start;
   }
 
-  inline size_t GetCustomerLastName(uint8_t *buf, FastRandom &r, int num) {
-    const std::string &s0 = NameTokens[num / 100];
-    const std::string &s1 = NameTokens[(num / 10) % 10];
-    const std::string &s2 = NameTokens[num % 10];
-    uint8_t *const begin = buf;
+  inline size_t GetCustomerLastName(uint8_t* buf, FastRandom& r, int num) {
+    const std::string& s0 = NameTokens[num / 100];
+    const std::string& s1 = NameTokens[(num / 10) % 10];
+    const std::string& s2 = NameTokens[num % 10];
+    uint8_t* const begin = buf;
     const size_t s0_sz = s0.size();
     const size_t s1_sz = s1.size();
     const size_t s2_sz = s2.size();
@@ -122,34 +134,34 @@ public:
     return buf - begin;
   }
 
-  inline size_t GetCustomerLastName(char *buf, FastRandom &r, int num) {
-    return GetCustomerLastName((uint8_t *)buf, r, num);
+  inline size_t GetCustomerLastName(char* buf, FastRandom& r, int num) {
+    return GetCustomerLastName((uint8_t*)buf, r, num);
   }
 
-  inline std::string GetCustomerLastName(FastRandom &r, int num) {
+  inline std::string GetCustomerLastName(FastRandom& r, int num) {
     std::string ret;
     ret.resize(CustomerLastNameMaxSize);
-    ret.resize(GetCustomerLastName((uint8_t *)&ret[0], r, num));
+    ret.resize(GetCustomerLastName((uint8_t*)&ret[0], r, num));
     return ret;
   }
 
-  inline std::string GetNonUniformCustomerLastNameLoad(FastRandom &r) {
+  inline std::string GetNonUniformCustomerLastNameLoad(FastRandom& r) {
     return GetCustomerLastName(r, NonUniformRandom(r, 255, 157, 0, 999));
   }
 
-  inline size_t GetNonUniformCustomerLastNameRun(uint8_t *buf, FastRandom &r) {
+  inline size_t GetNonUniformCustomerLastNameRun(uint8_t* buf, FastRandom& r) {
     return GetCustomerLastName(buf, r, NonUniformRandom(r, 255, 223, 0, 999));
   }
 
-  inline size_t GetNonUniformCustomerLastNameRun(char *buf, FastRandom &r) {
-    return GetNonUniformCustomerLastNameRun((uint8_t *)buf, r);
+  inline size_t GetNonUniformCustomerLastNameRun(char* buf, FastRandom& r) {
+    return GetNonUniformCustomerLastNameRun((uint8_t*)buf, r);
   }
 
-  inline std::string GetNonUniformCustomerLastNameRun(FastRandom &r) {
+  inline std::string GetNonUniformCustomerLastNameRun(FastRandom& r) {
     return GetCustomerLastName(r, NonUniformRandom(r, 255, 223, 0, 999));
   }
 
-  inline std::string RandomStr(FastRandom &r, uint64_t len) {
+  inline std::string RandomStr(FastRandom& r, uint64_t len) {
     // this is a property of the oltpbench implementation...
     if (!len)
       return "";
@@ -168,7 +180,7 @@ public:
   }
 
   // RandomNStr() actually produces a string of length len
-  inline std::string RandomNStr(FastRandom &r, uint64_t len) {
+  inline std::string RandomNStr(FastRandom& r, uint64_t len) {
     const char base = '0';
     std::string buf(len, 0);
     for (uint64_t i = 0; i < len; i++)
@@ -192,7 +204,7 @@ public:
   }
 
   // only used for customer index, maybe some problems when used.
-  inline void ConvertString(char *newstring, const char *oldstring, int size) {
+  inline void ConvertString(char* newstring, const char* oldstring, int size) {
     for (int i = 0; i < 8; i++)
       if (i < size)
         newstring[7 - i] = oldstring[i];
@@ -209,11 +221,11 @@ public:
   inline uint64_t MakeCustomerIndexKey(int32_t w_id, int32_t d_id,
                                        std::string s_last,
                                        std::string s_first) {
-    uint64_t *seckey = new uint64_t[5];
+    uint64_t* seckey = new uint64_t[5];
     int32_t did = d_id + (w_id * num_district_per_warehouse_);
     seckey[0] = did;
-    ConvertString((char *)(&seckey[1]), s_last.data(), s_last.size());
-    ConvertString((char *)(&seckey[3]), s_first.data(), s_first.size());
+    ConvertString((char*)(&seckey[1]), s_last.data(), s_last.size());
+    ConvertString((char*)(&seckey[3]), s_first.data(), s_first.size());
     return (uint64_t)seckey;
   }
 
@@ -272,4 +284,4 @@ public:
     return s_id;
   }
 };
-} // end of namespace TPCC
+}  // end of namespace TPCC

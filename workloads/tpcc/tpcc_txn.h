@@ -58,13 +58,13 @@ public:
 //   "getLastOrder": "SELECT O_ID, O_CARRIER_ID, O_ENTRY_D FROM ORDERS WHERE O_W_ID = ? AND O_D_ID = ? AND O_C_ID = ? ORDER BY O_ID DESC LIMIT 1", # w_id, d_id, c_id
 //   "getOrderLines": "SELECT OL_SUPPLY_W_ID, OL_I_ID, OL_QUANTITY, OL_AMOUNT, OL_DELIVERY_D FROM ORDER_LINE WHERE OL_W_ID = ? AND OL_D_ID = ? AND OL_O_ID = ?", # w_id, d_id, o_id
   
-  bool OrderStatus(TPCCTable *tpcc_client, FastRandom *random_generator);
+  bool OrderStatus(TPCCTable *tpcc_client, FastRandom &random_generator);
 
 //   "Stock level"
 //   "getOId": "SELECT D_NEXT_O_ID FROM DISTRICT WHERE D_W_ID = ? AND D_ID = ?",
 //   "getStockCount": "SELECT COUNT(DISTINCT(OL_I_ID)) FROM ORDER_LINE, STOCK  WHERE OL_W_ID = ? AND OL_D_ID = ? AND OL_O_ID < ? AND OL_O_ID >= ? AND S_W_ID = ? AND S_I_ID = OL_I_ID AND S_QUANTITY < ?
  
-  bool StockLevel(TPCCTable *tpcc_client, FastRandom *random_generator);
+  bool StockLevel(TPCCTable *tpcc_client, FastRandom &random_generator);
 
 private:
 };
