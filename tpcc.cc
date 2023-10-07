@@ -42,45 +42,43 @@ double RunTPCC(uint32_t txn_count,
   bool tx_committed = false;
   // Running transactions
   for (auto i = 0; i < txn_count; i++) {
-
-    TPCC::TPCCTxType tx_type = tpcc_workgen_arr[Utils::FastRand(&seed) % 100];
+     TPCC::TPCCTxType tx_type = tpcc_workgen_arr[Utils::FastRand(&seed) % 100];
 
     switch (tx_type) {
       case TPCC::TPCCTxType::kDelivery: {
-        do {
-          tx_committed = txn.Delivery(&tpcc_client, random_generator);
-        } while (tx_committed != true);
+        tx_committed = txn.Delivery(&tpcc_client, random_generator);
+        printf("type: delivery   ");
         break;
       }
       case TPCC::TPCCTxType::kNewOrder: {
-        do {
-          tx_committed = txn.NewOrder(&tpcc_client, random_generator);
-        } while (tx_committed != true);
+        tx_committed = txn.NewOrder(&tpcc_client, random_generator);
+        printf("type: new order   ");
         break;
       }
       case TPCC::TPCCTxType::kOrderStatus: {
-        do {
-          tx_committed = txn.OrderStatus(&tpcc_client, random_generator);
-        } while (tx_committed != true);
+        tx_committed = txn.OrderStatus(&tpcc_client, random_generator);
+        printf("type: order status   ");
         break;
       }
       case TPCC::TPCCTxType::kPayment: {
-        do {
-          tx_committed = txn.Payment(&tpcc_client, random_generator);
-        } while (tx_committed != true);
+        tx_committed = txn.Payment(&tpcc_client, random_generator);
+        printf("type: payment   ");
         break;
       }
       case TPCC::TPCCTxType::kStockLevel: {
-        do {
-          tx_committed = txn.StockLevel(&tpcc_client, random_generator);
-        } while (tx_committed != true);
+        tx_committed = txn.StockLevel(&tpcc_client, random_generator);
+        printf("type: stock level   ");
         break;
       }
       default:
         printf("Unexpected transaction type %d\n", static_cast<int>(tx_type));
         abort();
     }
- 
+    printf("\t transaction count: %d", i);
+    printf(", tpcc get record count: %lu, put record count: %lu \n", tpcc_client.GetLoadRecordCount(),tpcc_client.GetLoadRecordCount());
+
+
+
   }
   clock_gettime(CLOCK_REALTIME, &bench_end_time);
   double bench_sec =
