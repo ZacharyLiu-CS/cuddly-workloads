@@ -8,6 +8,7 @@
 
 #include <atomic>
 #include "schemas.h"
+#include "kv_interface.h"
 
 namespace TPCC {
 class TPCCTable {
@@ -21,6 +22,7 @@ class TPCCTable {
 
   std::atomic_uint64_t write_record_count_ = 0;
   std::atomic_uint64_t read_record_count_ = 0;
+
 
  public:
   TPCCTable() {
