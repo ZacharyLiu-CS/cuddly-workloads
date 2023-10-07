@@ -5,17 +5,25 @@
 // Copyright (c) 2023 liuzhenm@mail.ustc.edu.cn.
 //
 #include "tpcc_tables.h"
+#include <array>
 #include <atomic>
 #include <cstdint>
 #include <set>
 #include <string>
 #include <vector>
-#include <array>
 #include "config.h"
 #include "schemas.h"
+#include "memorydb_impl.h"
 
 namespace TPCC {
-
+TPCCTable::TPCCTable() {
+  num_warehouse_ = FLAGS_NUM_WAREHOUSE;
+  num_district_per_warehouse_ = NUM_DISTRICT_PER_WAREHOUSE;
+  num_customer_per_district_ = NUM_CUSTOMER_PER_DISTRICT;
+  num_item_ = NUM_ITEM;
+  num_stock_per_warehouse_ = NUM_STOCK_PER_WAREHOUSE;
+  kv_impl = new MemoryDBImpl();
+}
 void TPCCTable::LoadTables() {
   LOG("num_warehouse_ = ", num_warehouse_,
       ", num_district_per_warehouse_ = ", num_district_per_warehouse_,

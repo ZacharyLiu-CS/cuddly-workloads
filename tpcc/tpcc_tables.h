@@ -21,16 +21,15 @@ class TPCCTable {
   uint32_t num_item_ = 0;
   uint32_t num_stock_per_warehouse_ = 0;
 
+  KVInterface* kv_impl = nullptr;
+
   std::atomic_uint64_t write_record_count_ = 0;
   std::atomic_uint64_t read_record_count_ = 0;
 
  public:
-  TPCCTable() {
-    num_warehouse_ = FLAGS_NUM_WAREHOUSE;
-    num_district_per_warehouse_ = NUM_DISTRICT_PER_WAREHOUSE;
-    num_customer_per_district_ = NUM_CUSTOMER_PER_DISTRICT;
-    num_item_ = NUM_ITEM;
-    num_stock_per_warehouse_ = NUM_STOCK_PER_WAREHOUSE;
+  TPCCTable();
+  virtual ~TPCCTable(){
+    delete kv_impl;
   }
   uint32_t GetNumWarehouse() { return num_warehouse_; }
   uint32_t GetNumDistrictPerWareHouse() { return num_district_per_warehouse_; }
@@ -62,14 +61,14 @@ class TPCCTable {
   template <typename T>
   int PutRecord(itemkey_t item_key, T* val_ptr) {
     write_record_count_ += 1;
-    return 1;
+    return kv_impl->Put(item_key, (uint8_t*)val_ptr, sizeof(T));
   }
 
   // -1 means fail, else means success
   template <typename T>
   int GetRecord(itemkey_t item_key, T* val_ptr) {
     read_record_count_ += 1;
-    return 1;
+    return kv_impl->Get(item_key, (uint8_t*)val_ptr);
   }
 
  public:

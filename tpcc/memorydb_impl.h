@@ -1,23 +1,21 @@
 //
-// rocksdb_impl.h
+// memorydb_impl.h
 //
 // Created by Zacharyliu-CS on 09/28/2023.
 // Copyright (c) 2023 liuzhenm@mail.ustc.edu.cn.
 //
 #pragma once
+#include <map>
+#include <memory>
+#include <unordered_map>
 #include "kv_interface.h"
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
 
+class MemoryDBImpl : public KVInterface {
 
-class RocksDBImpl : public KVInterface {
  public:
-  RocksDBImpl(std::string dbpath);
   int Put(uint64_t key, uint8_t* value, uint32_t size) override;
   int Get(uint64_t key, uint8_t* value) override;
-  virtual ~RocksDBImpl() {}
-
+  virtual ~MemoryDBImpl(){}
  private:
-  rocksdb::DB* db_;
-  rocksdb::Options options;
+  std::unordered_map<uint64_t, std::string> memory_db;
 };

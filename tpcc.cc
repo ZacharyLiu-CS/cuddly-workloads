@@ -16,7 +16,7 @@
 namespace TPCC {
 
 DEFINE_bool(DEBUG, true, "Set if output log message.");
-DEFINE_int32(NUM_WAREHOUSE, 10, "Set the num of warehouse.");
+DEFINE_int32(NUM_WAREHOUSE, 2, "Set the num of warehouse.");
 DEFINE_int32(FREQUENCY_NEW_ORDER, 45, "Default percentage of new-order txn.");
 DEFINE_int32(FREQUENCY_PAYMENT, 43, "Default percentage of payment txn.");
 DEFINE_int32(FREQUENCY_ORDER_STATUS, 4,
@@ -46,28 +46,28 @@ double RunTPCC(uint32_t txn_count,
 
     switch (tx_type) {
       case TPCC::TPCCTxType::kDelivery: {
-        tx_committed = txn.Delivery(&tpcc_client, random_generator);
         printf("type: delivery   ");
+        tx_committed = txn.Delivery(&tpcc_client, random_generator);
         break;
       }
       case TPCC::TPCCTxType::kNewOrder: {
-        tx_committed = txn.NewOrder(&tpcc_client, random_generator);
         printf("type: new order   ");
+        tx_committed = txn.NewOrder(&tpcc_client, random_generator);
         break;
       }
       case TPCC::TPCCTxType::kOrderStatus: {
-        tx_committed = txn.OrderStatus(&tpcc_client, random_generator);
         printf("type: order status   ");
+        tx_committed = txn.OrderStatus(&tpcc_client, random_generator);
         break;
       }
       case TPCC::TPCCTxType::kPayment: {
-        tx_committed = txn.Payment(&tpcc_client, random_generator);
         printf("type: payment   ");
+        tx_committed = txn.Payment(&tpcc_client, random_generator);
         break;
       }
       case TPCC::TPCCTxType::kStockLevel: {
-        tx_committed = txn.StockLevel(&tpcc_client, random_generator);
         printf("type: stock level   ");
+        tx_committed = txn.StockLevel(&tpcc_client, random_generator);
         break;
       }
       default:
@@ -76,8 +76,6 @@ double RunTPCC(uint32_t txn_count,
     }
     printf("\t transaction count: %d", i);
     printf(", tpcc get record count: %lu, put record count: %lu \n", tpcc_client.GetLoadRecordCount(),tpcc_client.GetLoadRecordCount());
-
-
 
   }
   clock_gettime(CLOCK_REALTIME, &bench_end_time);
