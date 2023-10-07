@@ -6,7 +6,7 @@
 //
 
 #include <iostream>
-#include "config.h"
+#include "tpcc/config.h"
 
 namespace TPCC {
 

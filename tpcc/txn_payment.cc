@@ -5,6 +5,7 @@
 // Copyright (c) 2023 liuzhenm@mail.ustc.edu.cn.
 //
 
+#include <unistd.h>
 #include "schemas.h"
 #include "tpcc_txn.h"
 #include <iostream>
@@ -131,7 +132,7 @@ bool TPCCTxn::Payment(TPCCTable *tpcc_client, FastRandom &random_generator) {
   strcat(hist_val.h_data, "    ");
   strcat(hist_val.h_data, dist_val.d_name);
   tpcc_client->PutRecord(hist_key.item_key, &hist_val);
-
+  return true;
 }
 } // end of namespace TPCC
 
