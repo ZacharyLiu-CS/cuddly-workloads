@@ -7,7 +7,7 @@
 
 #include <iostream>
 #include <gtest/gtest.h>
-#include "tables.h"
+#include "tpcc_tables.h"
 
 namespace TPCC{
 DEFINE_bool(DEBUG, true, "Set if output log message.");

@@ -1,14 +1,15 @@
 //
-// tables.h
+// tpcc_tables.h
 //
 // Created by Zacharyliu-CS on 07/13/2023.
 // Copyright (c) 2023 liuzhenm@mail.ustc.edu.cn.
 //
 #pragma once
 
+#include <array>
 #include <atomic>
-#include "schemas.h"
 #include "kv_interface.h"
+#include "schemas.h"
 
 namespace TPCC {
 class TPCCTable {
@@ -22,7 +23,6 @@ class TPCCTable {
 
   std::atomic_uint64_t write_record_count_ = 0;
   std::atomic_uint64_t read_record_count_ = 0;
-
 
  public:
   TPCCTable() {
@@ -43,6 +43,8 @@ class TPCCTable {
   uint64_t GetReadRecordCount() { return read_record_count_.load(); }
 
   void LoadTables();
+
+  std::vector<TPCCTxType> CreateWorkgenArray();
 
   void PopulateWarehouseTable(unsigned long seed);
 

@@ -6,7 +6,7 @@
 //
 #pragma once
 #include "schemas.h"
-#include "tables.h"
+#include "tpcc_tables.h"
 
 namespace TPCC {
 

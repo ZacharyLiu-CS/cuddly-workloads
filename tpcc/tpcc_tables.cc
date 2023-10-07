@@ -1,15 +1,16 @@
 //
-// tables.cc
+// tpcc_tables.cc
 //
 // Created by Zacharyliu-CS on 08/04/2023.
 // Copyright (c) 2023 liuzhenm@mail.ustc.edu.cn.
 //
-#include "tables.h"
+#include "tpcc_tables.h"
 #include <atomic>
 #include <cstdint>
 #include <set>
 #include <string>
 #include <vector>
+#include <array>
 #include "config.h"
 #include "schemas.h"
 
@@ -28,7 +29,34 @@ void TPCCTable::LoadTables() {
   PopulateItemTable(235443);
   PopulateStockTable(89785943);
 }
+std::vector<TPCCTxType> TPCCTable::CreateWorkgenArray() {
+  std::vector<TPCCTxType> workgen_arr(100);
 
+  int i = 0, j = 0;
+
+  j += FLAGS_FREQUENCY_NEW_ORDER;
+  for (; i < j; i++)
+    workgen_arr[i] = TPCCTxType::kNewOrder;
+
+  j += FLAGS_FREQUENCY_PAYMENT;
+  for (; i < j; i++)
+    workgen_arr[i] = TPCCTxType::kPayment;
+
+  j += FLAGS_FREQUENCY_ORDER_STATUS;
+  for (; i < j; i++)
+    workgen_arr[i] = TPCCTxType::kOrderStatus;
+
+  j += FLAGS_FREQUENCY_DELIVERY;
+  for (; i < j; i++)
+    workgen_arr[i] = TPCCTxType::kDelivery;
+
+  j += FLAGS_FREQUENCY_STOCK_LEVEL;
+  for (; i < j; i++)
+    workgen_arr[i] = TPCCTxType::kStockLevel;
+
+  assert(i == 100 && j == 100);
+  return workgen_arr;
+}
 void TPCCTable::PopulateWarehouseTable(unsigned long seed) {
   int total_warehouse_records_inserted = 0,
       total_warehouse_records_examined = 0;

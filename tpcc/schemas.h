@@ -1,5 +1,5 @@
 //
-// tables.h
+// tpcc_tables.h
 //
 // Created by Zacharyliu-CS on 07/13/2023.
 // Copyright (c) 2023 liuzhenm@mail.ustc.edu.cn.
