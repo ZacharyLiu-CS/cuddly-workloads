@@ -12,22 +12,37 @@
 #include <string>
 #include <vector>
 #include "config.h"
+#include "listdb_impl.h"
+#include "rocksdb_impl.h"
 #include "schemas.h"
 #include "memorydb_impl.h"
 
 namespace TPCC {
-TPCCTable::TPCCTable() {
+TPCCTable::TPCCTable(DBType dbtype) {
   num_warehouse_ = FLAGS_NUM_WAREHOUSE;
   num_district_per_warehouse_ = NUM_DISTRICT_PER_WAREHOUSE;
   num_customer_per_district_ = NUM_CUSTOMER_PER_DISTRICT;
   num_item_ = NUM_ITEM;
   num_stock_per_warehouse_ = NUM_STOCK_PER_WAREHOUSE;
-  kv_impl = new MemoryDBImpl();
+  switch (dbtype) {
+    case DBType::memorydb: 
+      kv_impl = new MemoryDBImpl();
+      break;
+    case DBType::rocksdb:
+      kv_impl = new RocksDBImpl(FLAGS_DB_PATH);
+      break;
+    case DBType::listdb:
+      kv_impl = new ListDBImpl(FLAGS_DB_PATH);
+      break;
+    default:
+      kv_impl = new MemoryDBImpl();
+  }
+
 }
 void TPCCTable::LoadTables() {
   LOG("num_warehouse_ = ", num_warehouse_,
       ", num_district_per_warehouse_ = ", num_district_per_warehouse_,
-      ", num_customer_per_district_ = ", num_customer_per_district_, "\n");
+      ", num_customer_per_district_ = " , num_customer_per_district_, "\n");
 
   PopulateWarehouseTable(9324);
   PopulateDistrictTable(129856349);

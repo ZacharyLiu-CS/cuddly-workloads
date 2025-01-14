@@ -5,6 +5,7 @@
 // Copyright (c) 2023 liuzhenm@mail.ustc.edu.cn.
 //
 
+#include <gflags/gflags.h>
 #include <atomic>
 #include <ctime>
 #include <iostream>
@@ -24,6 +25,8 @@ DEFINE_int32(FREQUENCY_ORDER_STATUS, 4,
 DEFINE_int32(FREQUENCY_DELIVERY, 4, "Default percentage of delivery txn.");
 DEFINE_int32(FREQUENCY_STOCK_LEVEL, 4,
              "Default percentage of stock-level txn.");
+DEFINE_string(DB_PATH, "/mnt/pmem0/tpccdb", "PATH of DB files stored");
+
 }  // namespace TPCC
 
 double RunTPCC(uint32_t txn_count,
@@ -42,31 +45,31 @@ double RunTPCC(uint32_t txn_count,
   bool tx_committed = false;
   // Running transactions
   for (auto i = 0; i < txn_count; i++) {
-     TPCC::TPCCTxType tx_type = tpcc_workgen_arr[Utils::FastRand(&seed) % 100];
+    TPCC::TPCCTxType tx_type = tpcc_workgen_arr[Utils::FastRand(&seed) % 100];
 
     switch (tx_type) {
       case TPCC::TPCCTxType::kDelivery: {
-        printf("type: delivery   ");
+        // printf("type: delivery   ");
         tx_committed = txn.Delivery(&tpcc_client, random_generator);
         break;
       }
       case TPCC::TPCCTxType::kNewOrder: {
-        printf("type: new order   ");
+        // printf("type: new order   ");
         tx_committed = txn.NewOrder(&tpcc_client, random_generator);
         break;
       }
       case TPCC::TPCCTxType::kOrderStatus: {
-        printf("type: order status   ");
+        // printf("type: order status   ");
         tx_committed = txn.OrderStatus(&tpcc_client, random_generator);
         break;
       }
       case TPCC::TPCCTxType::kPayment: {
-        printf("type: payment   ");
+        // printf("type: payment   ");
         tx_committed = txn.Payment(&tpcc_client, random_generator);
         break;
       }
       case TPCC::TPCCTxType::kStockLevel: {
-        printf("type: stock level   ");
+        // printf("type: stock level   ");
         tx_committed = txn.StockLevel(&tpcc_client, random_generator);
         break;
       }
@@ -74,8 +77,8 @@ double RunTPCC(uint32_t txn_count,
         printf("Unexpected transaction type %d\n", static_cast<int>(tx_type));
         abort();
     }
-    printf("\t transaction count: %d", i);
-    printf(", tpcc get record count: %lu, put record count: %lu \n", tpcc_client.GetLoadRecordCount(),tpcc_client.GetLoadRecordCount());
+    // printf("\t transaction count: %d", i);
+    // printf(", tpcc get record count: %lu, put record count: %lu \n", tpcc_client.GetReadRecordCount(), tpcc_client.GetLoadRecordCount());
 
   }
   clock_gettime(CLOCK_REALTIME, &bench_end_time);
@@ -89,9 +92,11 @@ int main(int argc, char** argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
   TPCC::TestConfig();
 
-  TPCC::TPCCTable tpcc_client;
+  TPCC::TPCCTable tpcc_client(TPCC::DBType::rocksdb);
   std::vector<TPCC::TPCCTxType> tpcc_workgen_arr =
       tpcc_client.CreateWorkgenArray();
   tpcc_client.LoadTables();
-  RunTPCC(100000, tpcc_workgen_arr, tpcc_client);
+  uint64_t txn_count = 100000;
+  double benchsec = RunTPCC(100000, tpcc_workgen_arr, tpcc_client);
+  printf("transaction count = %ld, sec = %.2lf, tmpC = %.2lf\n", txn_count, benchsec, txn_count*60/benchsec);
 }

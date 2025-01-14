@@ -8,10 +8,21 @@
 
 #include <array>
 #include <atomic>
+#include <cstring>
 #include "kv_interface.h"
 #include "schemas.h"
+#include "config.h"
 
 namespace TPCC {
+
+enum class DBType: uint8_t{
+  memorydb = 0,
+  rocksdb,
+  listdb,
+  neopmkv,
+};
+
+
 class TPCCTable {
  private:
   // Pre-defined constants, which will be modified for tests
@@ -27,7 +38,7 @@ class TPCCTable {
   std::atomic_uint64_t read_record_count_ = 0;
 
  public:
-  TPCCTable();
+  TPCCTable(DBType db_type = DBType::memorydb);
   virtual ~TPCCTable(){
     delete kv_impl;
   }
@@ -61,14 +72,23 @@ class TPCCTable {
   template <typename T>
   int PutRecord(itemkey_t item_key, T* val_ptr) {
     write_record_count_ += 1;
-    return kv_impl->Put(item_key, (uint8_t*)val_ptr, sizeof(T));
+    std::string value;
+    value.resize(sizeof(T));
+    memcpy(value.data(), val_ptr, sizeof(T));
+    return kv_impl->Put(item_key, value);
   }
 
   // -1 means fail, else means success
   template <typename T>
   int GetRecord(itemkey_t item_key, T* val_ptr) {
     read_record_count_ += 1;
-    return kv_impl->Get(item_key, (uint8_t*)val_ptr);
+    std::string value;
+    auto s = kv_impl->Get(item_key, value);
+    if( s != 1){
+      return -1;
+    }
+    memcpy((char*)val_ptr, value.data(), sizeof(T));
+    return 1;
   }
 
  public:

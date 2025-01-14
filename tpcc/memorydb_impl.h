@@ -7,14 +7,15 @@
 #pragma once
 #include <map>
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include "kv_interface.h"
 
 class MemoryDBImpl : public KVInterface {
 
  public:
-  int Put(uint64_t key, uint8_t* value, uint32_t size) override;
-  int Get(uint64_t key, uint8_t* value) override;
+  int Put(uint64_t key, const std::string& value) override;
+  int Get(uint64_t key, std::string& value) override;
   virtual ~MemoryDBImpl(){}
  private:
   std::unordered_map<uint64_t, std::string> memory_db;

@@ -6,6 +6,9 @@
 //
 
 #include "rocksdb_impl.h"
+#include <rocksdb/status.h>
+#include <string>
+#include <valarray>
 #include "rocksdb/cache.h"
 #include "rocksdb/filter_policy.h"
 #include "rocksdb/iterator.h"
@@ -18,22 +21,23 @@ using namespace TPCC;
 RocksDBImpl::RocksDBImpl(std::string dbpath) {
 
   options.create_if_missing = true;
-  options.use_direct_reads = true;
-  options.use_direct_io_for_flush_and_compaction = true;
+  options.use_direct_reads = false;
+  options.use_direct_io_for_flush_and_compaction = false;
   options.disable_auto_compactions = false;
-  options.max_background_compactions = 4;
-  options.max_background_jobs = 4;
+  options.max_background_compactions = 8;
+  options.max_background_jobs = options.max_background_compactions + 4;
   options.write_buffer_size = 64 << 20;
   options.target_file_size_base = 16 << 20;
-  options.env = rocksdb::NewDCPMMEnv(rocksdb::DCPMMEnvOptions());
 
   // setup the pmem configuration
   std::string pmem_rocksdb_path = dbpath;
+
+  LOG("pm rocksdb path: ", pmem_rocksdb_path);
   // configure for pmem kv sepeartion
   options.wal_dir = pmem_rocksdb_path + "/wal";
   options.dcpmm_kvs_enable = true;
   options.dcpmm_kvs_mmapped_file_fullpath = pmem_rocksdb_path + "/kvs";
-  options.dcpmm_kvs_mmapped_file_size = 1024*1024*1024;
+  options.dcpmm_kvs_mmapped_file_size = 16*uint64_t(1024*1024*1024);
   options.dcpmm_kvs_value_thres = 64;  // minimal size to do kv sep
   options.dcpmm_compress_value = false;
   options.allow_mmap_reads = true;
@@ -48,11 +52,30 @@ RocksDBImpl::RocksDBImpl(std::string dbpath) {
   options.table_factory.reset(
       rocksdb::NewBlockBasedTableFactory(block_options));
   options.statistics = rocksdb::CreateDBStatistics();
+  options.env = rocksdb::NewDCPMMEnv(rocksdb::DCPMMEnvOptions());
 
-  rocksdb::Status s = rocksdb::DB::Open(options, dbpath, &db_);
+
+  rocksdb::Status s = rocksdb::DB::Open(options, pmem_rocksdb_path, &db_);
   if (!s.ok()) {
     LOG("init rocksdb failed!");
+    abort();
   }
 }
-int RocksDBImpl::Put(uint64_t key, uint8_t* value, uint32_t size) {return 1;}
-int RocksDBImpl::Get(uint64_t key, uint8_t* value) {return 1;}
+int RocksDBImpl::Put(uint64_t key, const std::string&value) {
+  rocksdb::Status s;
+  s = db_->Put(rocksdb::WriteOptions(), std::to_string(key), 
+  value);
+  if( !s.ok()){
+    return -1;
+  }
+  return 1;
+}
+int RocksDBImpl::Get(uint64_t key, std::string& value) {
+  rocksdb::Status s;
+  s = db_->Get(rocksdb::ReadOptions(), std::to_string(key) ,
+  &value);
+  if( !s.ok()){
+    return -1;
+  }
+  return 1;
+}

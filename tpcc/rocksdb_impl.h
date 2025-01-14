@@ -13,8 +13,8 @@
 class RocksDBImpl : public KVInterface {
  public:
   RocksDBImpl(std::string dbpath);
-  int Put(uint64_t key, uint8_t* value, uint32_t size) override;
-  int Get(uint64_t key, uint8_t* value) override;
+  int Put(uint64_t key, const std::string& value) override;
+  int Get(uint64_t key, std::string& value) override;
   virtual ~RocksDBImpl() {}
 
  private:

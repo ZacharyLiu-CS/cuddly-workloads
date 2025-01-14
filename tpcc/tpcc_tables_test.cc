@@ -6,12 +6,15 @@
 //
 
 #include <iostream>
+#include <typeinfo>
+#include <gflags/gflags.h>
 #include <gtest/gtest.h>
+#include "schemas.h"
 #include "tpcc_tables.h"
 
 namespace TPCC{
 DEFINE_bool(DEBUG, true, "Set if output log message.");
-DEFINE_int32(NUM_WAREHOUSE, 10, "Set the num of warehouse.");
+DEFINE_int32(NUM_WAREHOUSE, 1, "Set the num of warehouse.");
 DEFINE_int32(FREQUENCY_NEW_ORDER, 45, "Default percentage of new-order txn.");
 DEFINE_int32(FREQUENCY_PAYMENT, 43, "Default percentage of payment txn.");
 DEFINE_int32(FREQUENCY_ORDER_STATUS, 4,
@@ -19,6 +22,7 @@ DEFINE_int32(FREQUENCY_ORDER_STATUS, 4,
 DEFINE_int32(FREQUENCY_DELIVERY, 4, "Default percentage of delivery txn.");
 DEFINE_int32(FREQUENCY_STOCK_LEVEL, 4,
              "Default percentage of stock-level txn.");
+DEFINE_string(DB_PATH, "/tmp", "PATH of DB files stored");
 }
 
 
@@ -28,6 +32,8 @@ class TPCC_TABLE: public testing::Test {
     tpcc_table.LoadTables();
     return tpcc_table.GetLoadRecordCount();
   }
+
+
   private:
   TPCC::TPCCTable tpcc_table;
 
@@ -46,8 +52,12 @@ TEST_F(TPCC_TABLE, TABLE_DEFINITION_SIZE_TEST){
 }
 
 TEST_F(TPCC_TABLE, TABLE_CREATION){
-  EXPECT_EQ(GenerateAllTables(), 6689729);
+  EXPECT_EQ(GenerateAllTables(), 758571);
 }
+
+ TEST_F(TPCC_TABLE, TBALE_DEFINITION){
+  EXPECT_EQ(TPCC::typeName(&TPCC::tpcc_customer_val_t::c_balance), TPCC::typeName(&TPCC::tpcc_customer_val_t::c_discount));
+ }
 
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);

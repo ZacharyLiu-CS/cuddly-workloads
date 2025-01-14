@@ -9,6 +9,7 @@
 #include <cstring>
 #include <string>
 #include <vector>
+#include <cxxabi.h>
 
 #include "config.h"
 #include "utils.h"
@@ -33,6 +34,15 @@ static std::string NameTokens[10] = {
     std::string("ANTI"), std::string("CALLY"), std::string("ATION"),
     std::string("EING"),
 };
+
+template<typename T>
+std::string typeName(const T& variable) {
+    return typeid(variable).name();
+}
+template<typename T>
+size_t typeSize(const T& variable){
+  return sizeof(T);
+}
 
 const char GOOD_CREDIT[] = "GC";
 

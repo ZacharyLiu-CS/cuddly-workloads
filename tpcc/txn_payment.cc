@@ -129,7 +129,7 @@ bool TPCCTxn::Payment(TPCCTable *tpcc_client, FastRandom &random_generator) {
   hist_val.h_date = tpcc_client->GetCurrentTimeMillis();  // different time at server and client cause errors?
   hist_val.h_amount = h_amount;
   strcpy(hist_val.h_data, ware_val.w_name);
-  strcat(hist_val.h_data, "    ");
+  strcat(hist_val.h_data, "  ");
   strcat(hist_val.h_data, dist_val.d_name);
   tpcc_client->PutRecord(hist_key.item_key, &hist_val);
   return true;

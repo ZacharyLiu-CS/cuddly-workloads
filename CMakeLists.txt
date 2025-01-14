@@ -6,7 +6,7 @@ project(tpcc_workload)
 
 #3. specify c++ compiler version
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-std=c++17 -g -pthread -O3 ")
+set(CMAKE_CXX_FLAGS "-std=c++17 -g -pthread ")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_definitions(-DON_DCPMM)
 
@@ -53,6 +53,7 @@ target_link_libraries(${PROJECT_NAME}
   pthread
   gflags
   rocksdb
+  listdb
   pmemobj
   pmem
   pthread
@@ -79,6 +80,7 @@ if (GTEST_FOUND)
     target_link_libraries(${testname}
       ${LIBPMEMOBJ_LIBRARIES}
       rocksdb
+      listdb
       pmemobj
       pmem
       pthread

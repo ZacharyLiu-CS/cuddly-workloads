@@ -5,16 +5,16 @@
 // Copyright (c) 2023 liuzhenm@mail.ustc.edu.cn.
 //
 #include "memorydb_impl.h"
-#include <cstring>
+#include <string>
 
-int MemoryDBImpl::Put(uint64_t key, uint8_t* value, uint32_t size) {
-  memory_db.insert_or_assign(key, std::string((char*)value, size));
+int MemoryDBImpl::Put(uint64_t key, const std::string& value) {
+  memory_db.insert_or_assign(key, value);
   return 1;
 }
-int MemoryDBImpl::Get(uint64_t key, uint8_t* value) {
+int MemoryDBImpl::Get(uint64_t key, std::string& value) {
   auto res = memory_db.find(key);
   if (res == memory_db.end())
     return -1;
-  memcpy((char*)value, res->second.data(), res->second.size());
+  value = res->second.data();
   return 1;
 }
